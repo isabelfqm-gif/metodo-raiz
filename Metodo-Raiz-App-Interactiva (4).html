@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Método Raíz — Isabel Quiñonez</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBF1EA;
+  --paper-2:#F3E1D1;
+  --ink:#3A2419;
+  --ink-soft:#836A5B;
+  --green-deep:#3D130C;
+  --green:#651F14;
+  --green-soft:#DDAE9B;
+  --sage:#EAC9BA;
+  --clay:#84AC3B;
+  --clay-soft:#B8D97F;
+  --gold:#D9A24B;
+  --line:#E9D9C9;
+  --card:#FFFBF6;
+  --shadow: 0 1px 2px rgba(61,19,12,.06), 0 6px 20px rgba(61,19,12,.07);
+  --radius: 18px;
+  --serif: "Fredoka", "Karla", sans-serif;
+  --sans: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block;}
+a{color:inherit;}
+button{font-family:inherit;}
+
+::selection{background:var(--clay-soft);color:#fff;}
+
+/* ---------- Layout shell ---------- */
+.app{
+  display:grid;
+  grid-template-columns: 272px 1fr;
+  min-height:100vh;
+}
+@media (max-width: 900px){
+  .app{grid-template-columns:1fr;}
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  background:var(--green-deep);
+  color:#EFEAD8;
+  padding:28px 22px 24px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:26px;
+}
+@media (max-width:900px){
+  .sidebar{position:relative;height:auto;}
+}
+.brand{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.brand-mark{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:1.5rem;
+  letter-spacing:.01em;
+  color:#fff;
+}
+.brand-logo{
+  width:100%;
+  max-width:190px;
+  height:auto;
+  border-radius:10px;
+  background:#fff;
+  padding:8px 10px;
+}
+.brand-sub{
+  font-size:.72rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--sage);
+}
+.nav-top{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.nav-link{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:9px 10px;
+  border-radius:10px;
+  color:#D9D4C0;
+  text-decoration:none;
+  font-size:.92rem;
+  cursor:pointer;
+  border:none;
+  background:none;
+  text-align:left;
+  width:100%;
+}
+.nav-link:hover{background:rgba(255,255,255,.06);color:#fff;}
+.nav-link.active{background:rgba(255,255,255,.1);color:#fff;font-weight:600;}
+
+/* root path */
+.root-path{
+  position:relative;
+  padding-left:26px;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  flex:1;
+}
+.root-path svg.spine{
+  position:absolute;
+  left:0; top:6px; bottom:6px;
+  width:26px;
+  height:calc(100% - 12px);
+}
+.stage-node{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:11px 8px 11px 4px;
+  cursor:pointer;
+  border-radius:10px;
+  background:none;
+  border:none;
+  color:#D9D4C0;
+  text-align:left;
+  width:100%;
+}
+.stage-node:hover{background:rgba(255,255,255,.06);}
+.stage-node.active{background:rgba(255,255,255,.11);}
+.node-dot{
+  width:15px;height:15px;
+  border-radius:50%;
+  border:2px solid var(--sage);
+  background:var(--green-deep);
+  flex:none;
+  position:relative;
+  z-index:2;
+  transition:background .3s, border-color .3s;
+}
+.node-dot.done{background:var(--gold);border-color:var(--gold);}
+.node-dot.partial{background:var(--green-soft);border-color:var(--sage);}
+.node-label{
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+}
+.node-letter{
+  font-family:var(--serif);
+  font-size:.68rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--sage);
+}
+.node-title{
+  font-size:.86rem;
+  color:#EFEAD8;
+}
+.stage-node.active .node-title{color:#fff;font-weight:600;}
+
+.sidebar-foot{
+  font-size:.72rem;
+  color:var(--sage);
+  border-top:1px solid rgba(255,255,255,.12);
+  padding-top:14px;
+  line-height:1.5;
+}
+
+/* mobile top bar */
+.mobile-bar{display:none;}
+@media (max-width:900px){
+  .mobile-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; background:var(--green-deep); color:#fff;
+    position:sticky; top:0; z-index:30;
+  }
+  .mobile-bar .brand-mark{font-size:1.15rem;}
+  .menu-btn{
+    background:none;border:1px solid rgba(255,255,255,.3);color:#fff;
+    border-radius:8px; padding:6px 10px; font-size:.85rem;
+  }
+  .sidebar{display:none;}
+  .sidebar.open{display:flex;}
+}
+
+/* ---------- Main ---------- */
+main{
+  padding: 44px 56px 90px;
+  max-width: 900px;
+}
+@media (max-width:900px){
+  main{padding:28px 20px 70px;}
+}
+
+.view{display:none;animation:fade .35s ease;}
+.view.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.eyebrow{
+  font-size:.74rem;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--clay);
+  font-weight:700;
+  margin-bottom:10px;
+  display:flex; align-items:center; gap:8px;
+}
+h1{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:2.5rem;
+  line-height:1.08;
+  margin:0 0 18px;
+  color:var(--green-deep);
+  letter-spacing:-.01em;
+}
+h2{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:1.55rem;
+  color:var(--green-deep);
+  margin:40px 0 14px;
+}
+h3{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:1.18rem;
+  color:var(--green);
+  margin:26px 0 10px;
+}
+p{margin:0 0 14px;color:var(--ink-soft);}
+.lede{
+  font-family:var(--sans);
+  font-style:italic;
+  font-weight:600;
+  font-size:1.2rem;
+  color:var(--ink);
+  line-height:1.5;
+  margin-bottom:26px;
+}
+
+.callout{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-left:4px solid var(--green-soft);
+  border-radius:12px;
+  padding:18px 20px;
+  margin:20px 0;
+  color:var(--ink-soft);
+  font-size:.96rem;
+}
+.callout.gold{border-left-color:var(--gold);}
+.callout.clay{border-left-color:var(--clay);}
+.callout strong{color:var(--ink);}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:26px 28px;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
+}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media (max-width:640px){.grid-2{grid-template-columns:1fr;}}
+
+/* buttons/links */
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:11px 20px;
+  border-radius:999px;
+  background:var(--green);
+  color:#fff !important;
+  text-decoration:none;
+  font-weight:600;
+  font-size:.9rem;
+  border:none;
+  cursor:pointer;
+  transition:transform .15s, background .15s;
+}
+.btn:hover{background:var(--green-deep);transform:translateY(-1px);}
+.btn.clay{background:var(--clay);}
+.btn.clay:hover{background:#6B8F2E;}
+.btn.ghost{
+  background:transparent;color:var(--green) !important;
+  border:1.5px solid var(--green-soft);
+}
+.btn.ghost:hover{background:rgba(101,31,20,.07);}
+
+/* Progress bar */
+.progress-wrap{
+  display:flex; align-items:center; gap:12px;
+  margin:6px 0 30px;
+}
+.progress-track{
+  flex:1; height:8px; background:var(--paper-2);
+  border-radius:6px; overflow:hidden; border:1px solid var(--line);
+}
+.progress-fill{
+  height:100%; background:linear-gradient(90deg, var(--green-soft), var(--gold));
+  border-radius:6px; transition:width .4s ease;
+  width:0%;
+}
+.progress-pct{font-size:.82rem;color:var(--ink-soft);font-weight:600;min-width:38px;text-align:right;}
+
+/* Stage path overview cards */
+.stage-cards{display:flex;flex-direction:column;gap:14px;}
+.stage-card{
+  display:grid; grid-template-columns:56px 1fr auto;
+  align-items:center; gap:18px;
+  background:var(--card); border:1px solid var(--line); border-radius:16px;
+  padding:18px 20px; cursor:pointer; text-decoration:none; color:inherit;
+  box-shadow:var(--shadow);
+  transition:transform .15s, border-color .15s;
+}
+.stage-card:hover{transform:translateX(3px); border-color:var(--green-soft);}
+.stage-icon{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;
+  background:var(--paper-2);
+  border:2px solid var(--sage);
+}
+.stage-card.done .stage-icon{background:var(--gold);border-color:var(--gold);}
+.stage-card-title{font-family:var(--serif);font-weight:600;font-size:1.1rem;color:var(--green-deep);}
+.stage-card-sub{font-size:.85rem;color:var(--ink-soft);margin-top:2px;}
+.stage-card-pct{font-size:.85rem;font-weight:700;color:var(--green);}
+
+/* Checklist */
+.checklist{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:9px;}
+.opt-item{display:flex;align-items:flex-start;gap:10px;font-size:.95rem;color:var(--ink);}
+.opt-item input[type=checkbox]{
+  appearance:none; -webkit-appearance:none;
+  width:19px;height:19px;flex:none;margin-top:1px;
+  border:2px solid var(--green-soft); border-radius:6px;
+  cursor:pointer; position:relative; background:#fff;
+}
+.opt-item input[type=checkbox]:checked{background:var(--green);border-color:var(--green);}
+.opt-item input[type=checkbox]:checked::after{
+  content:"✓"; position:absolute; top:-3px; left:2px; color:#fff; font-size:13px; font-weight:700;
+}
+.opt-item label{cursor:pointer;}
+
+.task-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 12px; border-radius:10px; background:var(--paper-2);
+  font-size:.94rem; font-weight:500;
+}
+.task-item input[type=checkbox]{
+  appearance:none; -webkit-appearance:none;
+  width:20px;height:20px;flex:none;margin-top:1px;
+  border:2px solid var(--clay); border-radius:50%;
+  cursor:pointer; position:relative; background:#fff;
+}
+.task-item input[type=checkbox]:checked{background:var(--clay);border-color:var(--clay);}
+.task-item input[type=checkbox]:checked::after{
+  content:"✓"; position:absolute; top:-2px; left:3px; color:#fff; font-size:12px; font-weight:700;
+}
+.task-item.checked label{text-decoration:line-through;color:var(--ink-soft);opacity:.75;}
+
+/* Reflection */
+.reflect{margin:16px 0 22px;}
+.reflect label{
+  display:block; font-weight:600; color:var(--ink); margin-bottom:8px; font-size:.95rem;
+}
+.reflect .hint{font-weight:400;color:var(--ink-soft);font-size:.85rem;display:block;margin-top:2px;}
+.reflect textarea{
+  width:100%; min-height:76px; resize:vertical;
+  border:1.5px solid var(--line); border-radius:12px;
+  padding:12px 14px; font-family:var(--sans); font-size:.95rem;
+  background:#fff; color:var(--ink);
+}
+.reflect textarea:focus{outline:none;border-color:var(--green-soft);}
+.save-hint{font-size:.76rem;color:var(--sage-text,#7C8A72);opacity:0;transition:opacity .3s;}
+.save-hint.show{opacity:1;}
+
+/* Activity block */
+.activity{
+  border-top:1px solid var(--line);
+  padding-top:26px; margin-top:26px;
+}
+.activity:first-of-type{border-top:none;margin-top:0;padding-top:0;}
+.activity-title{
+  font-family:var(--serif); font-weight:600; font-size:1.28rem; color:var(--green-deep);
+  margin-bottom:6px;
+}
+.sub-cat{
+  font-family:var(--sans); font-style:italic; font-weight:700; color:var(--green); font-size:1rem;
+  margin:18px 0 8px;
+}
+
+/* Resource list */
+.res-item{
+  display:flex; justify-content:space-between; align-items:center;
+  gap:12px; padding:12px 0; border-bottom:1px dashed var(--line);
+}
+.res-item:last-child{border-bottom:none;}
+.res-title{font-weight:600;font-size:.94rem;}
+.res-note{font-size:.83rem;color:var(--ink-soft);margin-top:2px;}
+
+/* footer nav within stage */
+.stage-footnav{
+  display:flex; justify-content:space-between; margin-top:44px; gap:12px;
+}
+
+/* misc */
+.tag{
+  display:inline-block; font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
+  background:var(--paper-2); color:var(--green); border-radius:999px; padding:4px 10px; font-weight:700;
+  margin-bottom:14px;
+}
+.person{
+  display:flex; gap:18px; align-items:center; margin:26px 0;
+}
+.person img{
+  width:88px;height:88px;border-radius:50%;object-fit:cover;
+  border:3px solid var(--paper-2);
+}
+.check-line{font-size:.9rem;color:var(--ink-soft);display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;}
+.check-line::before{content:"✓";color:var(--green);font-weight:700;}
+
+hr.rule{border:none;border-top:1px solid var(--line);margin:34px 0;}
+
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px;}
+.chip{
+  background:var(--paper-2); border-radius:999px; padding:6px 13px;
+  font-size:.82rem; color:var(--ink);
+}
+
+.affirm{
+  font-family:var(--sans); font-style:italic; font-weight:700; font-size:1.1rem;
+  color:var(--green-deep); text-align:center; padding:22px;
+  background:var(--card); border-radius:16px; border:1px solid var(--line);
+  margin:24px 0;
+}
+
+@media print{
+  .sidebar,.mobile-bar,.stage-footnav{display:none !important;}
+}
+
+.export-btn{
+  width:100%; justify-content:center; margin-bottom:6px; font-size:.82rem; padding:10px 14px;
+  color:#F3E1D1 !important; border-color:rgba(243,225,209,.4);
+}
+.export-btn:hover{background:rgba(255,255,255,.08);}
+
+.save-toast{
+  position:fixed; bottom:22px; right:22px;
+  background:var(--green-deep); color:#fff;
+  padding:10px 18px; border-radius:999px;
+  font-size:.85rem; font-weight:600;
+  box-shadow:var(--shadow);
+  opacity:0; transform:translateY(8px);
+  transition:opacity .25s, transform .25s;
+  pointer-events:none;
+  z-index:50;
+}
+.save-toast.show{opacity:1; transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="mobile-bar">
+  <span class="brand-mark">Método Raíz</span>
+  <button class="menu-btn" id="menuBtn">Menú ☰</button>
+</div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img class="brand-logo" src="data:image/png;base64,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" alt="Método Raíz" />
+      <span class="brand-sub">Isabel Quiñonez · Concientisa</span>
+    </div>
+
+    <div class="nav-top">
+      <button class="nav-link" data-route="inicio">Inicio</button>
+      <button class="nav-link" data-route="camino">Tu camino</button>
+    </div>
+
+    <nav class="root-path" id="rootPath">
+      <!-- stage nodes injected by JS -->
+    </nav>
+
+    <div class="nav-top">
+      <button class="nav-link" data-route="biblioteca">📚 Biblioteca Raíz</button>
+      <button class="nav-link" data-route="contacto">📲 Sesiones y soporte</button>
+    </div>
+
+    <button class="btn ghost export-btn" id="exportBtn">⬇ Descargar mis respuestas</button>
+
+    <div class="sidebar-foot">
+      🔒 Tus respuestas se guardan solo en este navegador y en este dispositivo. Nadie más puede verlas, ni siquiera Isabel, a menos que tú decidas compartirlas.
+    </div>
+  </aside>
+
+  <main id="main">
+    <!-- views injected by JS -->
+  </main>
+</div>
+
+<div class="save-toast" id="saveToast">✓ Guardado en este dispositivo</div>
+
+
+<script>window.__RAIZ_PHOTO__ = "data:image/jpeg;base64,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"; window.__RAIZ_LOGO__ = "data:image/png;base64,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";</script>
+<script>
+/* ============================================================
+   MÉTODO RAÍZ — App interactiva para pacientes
+   Isabel Quiñonez · Concientisa
+   ============================================================ */
+
+/* ---------------- Helpers de render ---------------- */
+let UID = 0;
+function nid(){ return "k" + (UID++); }
+
+function task(stage, text, checked, key){
+  const id = `task-${stage}-${key || nid()}`;
+  return `<div class="task-item" data-task-wrap>
+    <input type="checkbox" id="${id}" data-store="${id}" data-task data-stage="${stage}" ${checked?"checked":""}/>
+    <label for="${id}">${text}</label>
+  </div>`;
+}
+function checklist(stage, items, key){
+  return `<ul class="checklist">${items.map((t,i)=>{
+    const id = `opt-${stage}-${key ? key+"-"+i : nid()}`;
+    return `<li class="opt-item"><input type="checkbox" id="${id}" data-store="${id}"/><label for="${id}">${t}</label></li>`;
+  }).join("")}</ul>`;
+}
+function reflect(stage, label, hint, rows, key){
+  const id = `ref-${stage}-${key || nid()}`;
+  return `<div class="reflect">
+    <label for="${id}">${label}${hint?`<span class="hint">${hint}</span>`:""}</label>
+    <textarea id="${id}" data-store="${id}" data-label="${label.replace(/"/g,'&quot;')}" rows="${rows||3}" placeholder="Escribe aquí con calma, sin buscar la respuesta perfecta..."></textarea>
+  </div>`;
+}
+function subcat(t){ return `<div class="sub-cat">${t}</div>`; }
+function h3(t){ return `<h3>${t}</h3>`; }
+function p(t){ return `<p>${t}</p>`; }
+function callout(t, cls){ return `<div class="callout ${cls||""}">${t}</div>`; }
+function affirm(t){ return `<div class="affirm">${t}</div>`; }
+function linkBtn(label, url, cls){ return `<a class="btn ${cls||""}" href="${url}" target="_blank" rel="noopener">${label} ↗</a>`; }
+
+/* ---------------- Datos de las 6 etapas ---------------- */
+const STAGES = [
+{
+  id:1, letter:"R", icon:"🌱", name:"Reconocer",
+  session:"Sesión 1 — Descubriendo mi historia emocional",
+  goal:"Identifico mis patrones relacionales principales.",
+  objetivo:"Comprender qué está ocurriendo actualmente, identificar patrones repetitivos y comenzar a descubrir la raíz emocional de mis dificultades relacionales.",
+  aprenderas:["Qué son los patrones afectivos","Cómo influyen las experiencias pasadas","Qué activa mis emociones actualmente","Cómo funciona el proceso terapéutico"],
+  resultado:"Comienzo a identificar patrones y comprendo mejor qué me está ocurriendo.",
+  activities: [
+    {
+      title:"Actividad 1: Test Inicial de Apego",
+      body: p("Este test te permitirá identificar tu estilo de apego predominante y comprender mejor cómo te relacionas emocionalmente contigo misma y con los demás. Tu resultado será nuestro punto de partida para el trabajo que realizaremos durante el Método Raíz.")
+        + h3("Instrucciones")
+        + `<div class="checklist">
+            <div class="check-line">Haz clic en el botón de abajo.</div>
+            <div class="check-line">Responde con honestidad según cómo te sientes la mayor parte del tiempo.</div>
+            <div class="check-line">Lee tu resultado completo.</div>
+            <div class="check-line">Guarda una captura de tu resultado para comparar tu evolución.</div>
+            <div class="check-line">Reflexiona sobre las preguntas de abajo.</div>
+          </div>`
+        + `<p>${linkBtn("Hacer el Test de Apego","https://testapego.tiiny.site/","clay")}</p>`
+        + reflect(1,"¿Qué parte del resultado resonó más contigo?")
+        + reflect(1,"¿Hubo algo que te sorprendiera?")
+        + reflect(1,"¿Qué patrones reconoces en tus relaciones actuales?")
+        + reflect(1,"¿Qué te gustaría transformar durante este proceso?")
+    },
+    {
+      title:"Actividad 2: Mi Historia Relacional",
+      body: p("Antes de transformar nuestros patrones, primero necesitamos comprenderlos. Muchas veces creemos que nuestras relaciones son experiencias aisladas, pero al observar nuestra historia completa descubrimos dinámicas, miedos, necesidades y comportamientos que se repiten.")
+        + callout("No busques hacerlo perfecto. Lo importante es ser honesta contigo misma. Dedica entre 20 y 30 minutos, en un lugar tranquilo.")
+        + subcat("Mis relaciones importantes")
+        + reflect(1,"¿Cuáles han sido las relaciones más importantes de mi vida?")
+        + reflect(1,"¿Qué tenían en común estas relaciones?")
+        + reflect(1,"¿Qué buscaba o necesitaba recibir de estas personas?")
+        + reflect(1,"¿Qué me hacía permanecer en esas relaciones?")
+        + subcat("Patrones que se repiten")
+        + reflect(1,"¿Qué situaciones parecen repetirse en mis relaciones?")
+        + reflect(1,"¿Qué emociones aparecen con frecuencia?")
+        + reflect(1,"¿Qué suele activar mi ansiedad o inseguridad?")
+        + reflect(1,"¿Cómo reacciono cuando siento rechazo, distancia o abandono?")
+        + subcat("Lo que me duele hoy")
+        + reflect(1,"¿Qué situación me trajo a este proceso?")
+        + reflect(1,"¿Qué me gustaría cambiar de mis relaciones?")
+        + reflect(1,"¿Cómo me gustaría sentirme en una relación sana?")
+        + subcat("Mi conclusión")
+        + reflect(1,"Hoy me doy cuenta de que...")
+        + reflect(1,"El patrón que más identifico en mí es...")
+        + reflect(1,"Lo que deseo transformar durante este proceso es...")
+    }
+  ],
+  tareasPrevias: ["Ver Módulo I — Clase 1: ¿Por qué sigo sufriendo tanto en mis relaciones?", "Ver Módulo I — Clase 2: El ciclo que mantiene viva tu ansiedad"],
+  antesDeAvanzar: ["Realizar el test","Guardar una captura del resultado","Completar \"Mi Historia Relacional\""],
+},
+{
+  id:2, letter:"A", icon:"🧠", name:"Aprender",
+  session:"Sesión 2 — Comprendiendo mi apego",
+  goal:"Comprendo cómo funciona mi estilo de apego.",
+  objetivo:"Comprender cómo funciona mi sistema de apego y cómo influye en mis relaciones.",
+  aprenderas:["Qué es el apego","Estilos de apego","Sistema nervioso y activación","Ciclo del apego ansioso"],
+  resultado:"Reconozco cuándo mi sistema de apego se activa, identifico mis principales detonantes emocionales y comienzo a comprender los patrones que mantienen mis dificultades relacionales.",
+  activities:[
+    {
+      title:"Actividad 1: Mapa Personal de Activación",
+      body: p("Esta actividad te ayudará a identificar las situaciones que activan tus emociones y comprender qué necesidades o miedos podrían estar detrás de ellas.")
+        + h3("Instrucciones")
+        + p("Lee cada situación y marca aquellas que suelen activar emociones intensas en ti. Puedes marcar todas las que apliquen.")
+        + subcat("💔 Distancia emocional")
+        + checklist(2,["Tarda mucho en responder","Siento que está más frío/a conmigo","Cancela planes / ya no busca hablar tanto","Lo siento distante","Otro: ___________"])
+        + subcat("🚨 Rechazo")
+        + checklist(2,["No me elige","Me compara con otras personas","No valida mis emociones","Siento que no soy suficiente","Ignora mis necesidades","Otro: ___________"])
+        + subcat("😔 Abandono")
+        + checklist(2,["Se aleja después de una discusión","No sé qué siente por mí","Siento que podría reemplazarme","Cambia su comportamiento de repente","Tengo miedo de perder la relación","Otro: ___________"])
+        + subcat("😣 Falta de control")
+        + checklist(2,["No sé qué está pensando","No tengo claridad sobre la relación","Hay señales confusas","No sé qué esperar","Me siento insegura","Otro: ___________"])
+        + reflect(2,"Las situaciones que más activan mis emociones son:","¿Qué tienen en común?",4)
+        + subcat("¿Qué miedo podría estar detrás?")
+        + checklist(2,["Rechazo","Abandono","No ser suficiente","Soledad","Perder el control","Otro: ___________"])
+    },
+    {
+      title:"Actividad 2: Detectando mi Ciclo Relacional",
+      body: p("Muchas veces reaccionamos de forma automática sin darnos cuenta de que seguimos un ciclo que se repite. Esta actividad te ayudará a identificar ese patrón. Piensa en una relación que te haya generado mucho sufrimiento y marca las frases con las que te identifiques.")
+        + subcat("Cuando empiezo a sentir inseguridad...")
+        + checklist(2,["Sobrepienso","Analizo todo","Necesito respuestas","Busco tranquilidad inmediata","Me cuesta concentrarme en otra cosa","Me imagino escenarios negativos"])
+        + subcat("Entonces suelo...")
+        + checklist(2,["Escribir más de lo normal","Buscar explicaciones","Revisar redes sociales","Pedir validación","Buscar señales","Intentar recuperar cercanía","Alejarme para protegerme"])
+        + subcat("Después normalmente...")
+        + checklist(2,["Me siento avergonzada","Me siento culpable","Me siento más ansiosa","Siento alivio temporal","Me siento rechazada","Me prometo no volver a hacerlo"])
+        + subcat("Y finalmente...")
+        + checklist(2,["El ciclo vuelve a repetirse","Sigo esperando algo diferente","Me siento atrapada","No entiendo por qué sigo haciendo lo mismo"])
+        + h3("Reflexión final: mi ciclo suele verse así")
+        + reflect(2,"Me activo por:",null,2)
+        + reflect(2,"Entonces hago:",null,2)
+        + reflect(2,"Y termino sintiéndome:",null,2)
+        + reflect(2,"La parte del ciclo que más me gustaría cambiar es:",null,3)
+    },
+    {
+      title:"Actividad 3: Mi Perfil de Apego en la Vida Real",
+      body: p("Ahora que ya conoces tu resultado del test de apego, es momento de observar cómo ese estilo aparece en tu vida cotidiana. El objetivo no es etiquetarte, sino reconocer los comportamientos, pensamientos y emociones que forman parte de tu patrón relacional.")
+        + reflect(2,"Cuando siento que alguien se aleja, normalmente...")
+        + reflect(2,"Cuando no recibo la atención o validación que espero...")
+        + reflect(2,"Lo que más temo en una relación es...")
+        + reflect(2,"Lo que más necesito sentir en una relación es...")
+        + reflect(2,"Mi estilo de apego suele aparecer cuando...")
+        + reflect(2,"Una conducta que me gustaría cambiar es...")
+        + reflect(2,"Una fortaleza que reconozco en mí es...")
+        + h3("💭 Reflexión final")
+        + reflect(2,"¿Qué descubriste sobre la forma en que te relacionas?")
+        + reflect(2,"¿Qué te gustaría comenzar a hacer diferente?")
+    }
+  ],
+  antesDeAvanzar:["Completar Mapa Personal de Activación","Completar Detectando Mi Ciclo Relacional","Completar Mi Perfil de Apego en la Vida Real","Ver todas las clases del módulo"],
+  reflexionExtra:["¿Qué aprendí sobre mí esta semana?","¿Qué patrón comencé a reconocer?","¿Qué me sorprendió descubrir?"],
+  recursos:{
+    lectura:{titulo:"Apego Ansioso — Walter Riso", nota:"La consigues en la Biblioteca Raíz. Comienza por: Parte I — Comprendiendo el Apego Ansioso, y Parte II — Las Lecciones del Apego Ansioso.", preguntas:["¿Qué aspectos del libro describen mi experiencia?","¿Qué comportamientos reconozco en mí?","¿Qué me gustaría empezar a cambiar?"]},
+    videos:[
+      {titulo:"¿Qué es el apego ansioso y cómo se manifiesta?", url:"https://www.youtube.com/watch?v=od0aba9V3Vw"},
+      {titulo:"Cómo dejar de reaccionar desde el miedo al abandono", url:"https://www.youtube.com/watch?v=Y3X7QjnU8Ow"}
+    ],
+    reflexionOpcional:["¿Qué fue lo que más resonó conmigo?","¿Qué patrón identifiqué con mayor claridad?","¿Qué me gustaría trabajar durante este proceso?"]
+  }
+},
+{
+  id:3, letter:"Í", icon:"❤️", name:"Integrar",
+  session:"Sesión 3 — Regulación emocional",
+  goal:"Aprendo a regular mis emociones antes de reaccionar.",
+  objetivo:"Aprender herramientas para regular mis emociones antes de reaccionar impulsivamente.",
+  aprenderas:["Sistema nervioso","Ventana de tolerancia","Grounding","Respiración reguladora"],
+  resultado:"Comienzo a identificar cuándo mi sistema nervioso está activado y desarrollo herramientas concretas para regular mis emociones antes de reaccionar impulsivamente.",
+  activities:[
+    {
+      title:"Actividad 1: Crear Mi Kit de Regulación",
+      body: p("Cuando estamos emocionalmente activados solemos olvidar las herramientas que sí nos ayudan. Vamos a crear un kit personal para esos momentos donde sientas ansiedad, miedo al abandono, impulsividad o necesidad urgente de actuar.")
+        + subcat("🌿 Cosas que me ayudan a sentir calma")
+        + checklist(3,["Caminar","Respirar profundamente","Escuchar música","Tomar agua","Hablar con alguien de confianza","Escribir","Otro: ___________"])
+        + subcat("🎧 Recursos que puedo utilizar")
+        + checklist(3,["Audio de regulación","Meditación","Playlist relajante","Ejercicio físico","Otro: ___________"])
+        + subcat("💭 Frases que necesito recordar cuando me activo")
+        + checklist(3,["No necesito resolver esto ahora mismo.","Una emoción no es una emergencia.","Puedo sentir esto sin reaccionar impulsivamente.","Mi valor no depende de esta situación.","Otro: ___________"])
+        + reflect(3,"Mi Kit Personal de Regulación — las tres herramientas que más me ayudan son:",null,3)
+    },
+    {
+      title:"Actividad 2: Practicando la Regla de los 20 Minutos",
+      body: p("Muchas conductas impulsivas ocurren cuando actuamos desde la activación emocional. Esta herramienta te ayudará a crear un espacio entre lo que sientes y lo que haces.")
+        + h3("Instrucciones")
+        + p("Durante esta semana, cuando sientas ganas de escribirle a alguien impulsivamente, revisar redes sociales, pedir validación, insistir para obtener respuestas o reaccionar inmediatamente: haz una pausa de 20 minutos y utiliza alguna herramienta de tu Kit de Regulación.")
+        + reflect(3,"¿Qué quería hacer impulsivamente?")
+        + reflect(3,"¿Qué hice durante los 20 minutos?")
+        + reflect(3,"¿Cómo me sentía al inicio?")
+        + reflect(3,"¿Cómo me sentía después?")
+        + reflect(3,"¿Tomé una decisión diferente?")
+    },
+    {
+      title:"Actividad 3: Mi Plan Personal de Calma",
+      body: reflect(3,"Cuando me siento activada normalmente...")
+        + subcat("Las señales que indican que mi ansiedad está aumentando son...")
+        + checklist(3,["Sobrepienso","Necesito respuestas urgentes","No puedo concentrarme","Reviso constantemente el teléfono","Otro: ___________"])
+        + reflect(3,"Cuando note estas señales voy a...",null,3)
+        + reflect(3,"Mi compromiso conmigo esta semana es:")
+        + callout("<strong>Recurso obligatorio:</strong> escucha el Audio de Regulación Emocional (lo encuentras en la Biblioteca Raíz) al menos una vez durante la semana. Idealmente practícalo también cuando notes que tu ansiedad comienza a activarse.","gold")
+    }
+  ],
+  antesDeAvanzar:["Completar Mi Kit de Regulación","Practicar la Regla de los 20 Minutos","Completar Mi Plan Personal de Calma","Escuchar el Audio de Regulación Emocional"],
+},
+{
+  id:4, letter:"Z", icon:"🔎", name:"Zona de Origen",
+  session:"Sesión 4 — Sanando heridas y creencias",
+  goal:"Identifico las heridas emocionales que sostienen mis patrones actuales.",
+  objetivo:"Identificar las heridas y creencias que sostienen mis patrones actuales.",
+  aprenderas:["Heridas emocionales","Creencias núcleo","Niño interior","Dependencia emocional"],
+  resultado:"Comienzo a identificar la raíz emocional de mis patrones actuales y desarrollo una comprensión más profunda, compasiva y consciente de mi historia.",
+  activities:[
+    {
+      title:"Actividad 1: Test de Heridas Emocionales",
+      body: p("Muchas de nuestras reacciones actuales tienen su origen en experiencias emocionales tempranas. Este test te ayudará a identificar cuáles heridas podrían estar teniendo mayor influencia en tu vida actual.")
+        + `<div class="checklist"><div class="check-line">Realiza el test completo.</div><div class="check-line">Lee tu resultado con curiosidad, no con juicio.</div></div>`
+        + `<p>${linkBtn("Hacer el Test de Heridas de la Infancia","https://tesdeheridasdeinfancia.tiiny.site/","clay")}</p>`
+        + reflect(4,"¿Qué herida apareció con mayor intensidad?")
+        + reflect(4,"¿Qué situaciones actuales parecen conectarse con ella?")
+        + reflect(4,"¿Qué aspectos de tu vida podrían estar siendo influenciados por esta herida?")
+    },
+    {
+      title:"Actividad 2: Reflexión Guiada sobre mi Infancia",
+      body: p("Para comprender nuestra historia emocional primero necesitamos mirar de dónde venimos. No buscamos encontrar culpables. Buscamos comprender qué aprendiste sobre el amor, la seguridad, el rechazo y el valor personal durante tus primeros años.")
+        + reflect(4,"Si tu infancia fuera una película, ¿cuál es una de las escenas que recuerdas con mayor claridad?")
+        + reflect(4,"¿Quiénes aparecen en ese recuerdo? ¿Qué hacían? ¿Cómo te hacían sentir?")
+        + reflect(4,"¿Hay algún recuerdo que vuelva con frecuencia? ¿Por qué crees que sigue apareciendo?")
+        + reflect(4,"Si pudieras hablar con esa niña hoy, ¿qué le dirías?")
+        + h3("💭 Reflexión final")
+        + reflect(4,"Lo que más me llamó la atención de este ejercicio fue:")
+        + reflect(4,"Lo que creo que esa niña necesitaba escuchar era:")
+    },
+    {
+      title:"Actividad 3: Carta a mi Parte Ansiosa",
+      body: p("Muchas veces intentamos luchar contra nuestra ansiedad cuando en realidad necesita ser comprendida. Esta actividad busca cambiar la relación que tienes con esa parte de ti. Imagina que tu ansiedad pudiera hablar y escribe una carta respondiendo:")
+        + reflect(4,"¿Qué intenta proteger?")
+        + reflect(4,"¿Qué teme que ocurra?")
+        + reflect(4,"¿Qué necesita escuchar de ti?")
+        + reflect(4,"¿Qué le agradecerías?")
+        + reflect(4,"¿Qué te gustaría decirle hoy?")
+        + affirm("“Gracias por intentar protegerme. A partir de hoy quiero aprender nuevas formas de cuidarme.”")
+    },
+    {
+      title:"Actividad 4: Encuentro con mi Niño Interior",
+      body: p("Dentro de ti sigue existiendo una parte que vivió experiencias, necesidades y emociones que quizá nunca fueron completamente atendidas. Este ejercicio busca comenzar a construir una relación más segura y compasiva contigo misma.")
+        + h3("Instrucciones")
+        + p("Busca un lugar tranquilo, respira profundamente, cierra los ojos e imagina a tu versión infantil frente a ti. Observa: ¿qué edad tiene? ¿Cómo se ve? ¿Cómo se siente? ¿Qué necesita?")
+        + reflect(4,"Lo primero que noté fue:")
+        + reflect(4,"Creo que mi niño interior necesita:")
+        + reflect(4,"El mensaje que quiero darle hoy es:")
+        + reflect(4,"Mi compromiso con esa parte de mí es:")
+    }
+  ],
+  antesDeAvanzar:["Comprendo mejor mis heridas emocionales.","Comienzo a conectar experiencias pasadas con patrones actuales.","Observo mi historia con más compasión y menos juicio.","Reconozco necesidades emocionales que quizás no habían sido atendidas."],
+  recursos:{
+    lecturas:[
+      {titulo:"Las Cinco Heridas que Impiden Ser Uno Mismo", nota:"Enfócate en la descripción de cada herida emocional y observa con cuál te identificas más."},
+      {titulo:"Sana tus Heridas", nota:"Presta atención a los capítulos sobre la infancia, las emociones reprimidas y el proceso de sanación."},
+      {titulo:"El Cuerpo Lleva la Cuenta", nota:"Para comprender cómo las experiencias tempranas siguen impactando cuerpo, emociones y relaciones."},
+    ],
+    videos:[
+      {titulo:"¿Cómo se forman las heridas de la infancia?", url:"https://www.youtube.com/watch?v=AHIhgfqHtog"},
+      {titulo:"Cómo las heridas de la infancia afectan tus relaciones adultas", url:"https://www.youtube.com/watch?v=kc46IJvewLw"}
+    ],
+    audio:"Meditación Niño Interior — utilízalo cuando realices \"Encuentro con mi Niño Interior\" o cuando desees conectar contigo desde un lugar de mayor compasión.",
+    reflexionOpcional:["¿Qué parte resonó más conmigo?","¿Qué experiencia de mi infancia comprendí mejor?","¿Qué herida identifiqué con mayor claridad?","¿Qué me gustaría empezar a sanar?"]
+  }
+},
+{
+  id:5, letter:"V", icon:"🛡️", name:"Vínculo Seguro",
+  session:"Sesión 5 — Construyendo seguridad interna",
+  goal:"Comienzo a construir seguridad emocional interna.",
+  objetivo:"Desarrollar una relación más segura conmigo misma y con los demás.",
+  aprenderas:["Necesidades emocionales","Autovalidación","Límites","Vínculos seguros"],
+  resultado:"Reconozco mis necesidades emocionales, desarrollo conductas más seguras y comienzo a construir una relación más sana conmigo misma y con los demás.",
+  activities:[
+    {
+      title:"Actividad 1: Inventario de Necesidades Emocionales",
+      body: p("Muchas personas aprendieron a ignorar sus necesidades emocionales para adaptarse, agradar o evitar conflictos. Sin embargo, una relación sana comienza cuando reconocemos lo que necesitamos y aprendemos a comunicarlo.")
+        + subcat("❤️ Necesito sentir...")
+        + checklist(5,["Escucha","Respeto","Honestidad","Atención","Cercanía emocional","Afecto","Apoyo","Validación emocional","Comunicación clara","Estabilidad","Libertad para ser yo misma","Confianza","Otro: ___________"])
+        + reflect(5,"Las tres necesidades más importantes para mí son:",null,3)
+        + reflect(5,"¿Cuáles de estas necesidades suelo pedir?")
+        + reflect(5,"¿Cuáles suelo callar o ignorar?")
+        + reflect(5,"¿Qué necesito empezar a comunicar con más claridad?")
+    },
+    {
+      title:"Actividad 2: Construyendo Conductas de Seguridad",
+      body: p("La seguridad emocional no aparece de un día para otro. Se construye a través de pequeñas decisiones y comportamientos que nos ayudan a responder desde la calma en lugar del miedo.")
+        + subcat("Cuando me sienta insegura quiero aprender a...")
+        + checklist(5,["Hacer una pausa antes de reaccionar","Validar mis emociones","Expresar mis necesidades de forma clara","Respetar mis límites","Tolerar la incertidumbre","Pedir apoyo de manera saludable","Confiar más en mí","Elegirme a mí misma","Otro: ___________"])
+        + reflect(5,"Mi compromiso esta semana — las tres conductas que quiero practicar son:",null,3)
+    },
+    {
+      title:"Actividad 3: Reflexión sobre Dependencia Emocional",
+      body: p("La dependencia emocional no significa amar demasiado. Significa sentir que necesitamos a otra persona para sentirnos completas, seguras o valiosas. Esta reflexión te ayudará a identificar dónde podrías estar entregando tu bienestar emocional a otros.")
+        + reflect(5,"Me cuesta estar sola cuando...")
+        + reflect(5,"Cuando alguien se aleja, suelo pensar...")
+        + reflect(5,"Lo que más temo perder en una relación es...")
+        + reflect(5,"A veces dejo de lado mis propias necesidades para...")
+        + reflect(5,"Una situación donde me elegí a mí misma fue...")
+        + reflect(5,"Una situación donde me abandoné a mí misma fue...")
+        + h3("💭 Reflexión final")
+        + reflect(5,"Hoy comprendo que depender emocionalmente significa...")
+        + reflect(5,"Lo que quiero comenzar a hacer diferente es...")
+    }
+  ],
+  antesDeAvanzar:["Reconozco mis necesidades emocionales.","Identifico conductas que fortalecen mi seguridad interna.","Comprendo mejor cómo aparece la dependencia emocional en mi vida.","Comienzo a elegirme desde un lugar más consciente."],
+  recursos:{
+    lecturas:[
+      {titulo:"Amar o Depender — Walter Riso", nota:"Enfócate en: diferenciar amor de dependencia emocional, el miedo a perder a la otra persona, la necesidad de validación afectiva y la construcción de autonomía emocional."},
+      {titulo:"De Tanto Amarte Me Olvidé de Mí", nota:"Presta atención al autoabandono, priorizar las necesidades de otros, pérdida de identidad y cómo recuperar el vínculo contigo misma."},
+    ],
+    videos:[
+      {titulo:"Dependencia emocional: por qué te cuesta soltar", url:"https://www.youtube.com/watch?v=3R6FyuoS4DM"},
+      {titulo:"Cómo dejar de necesitar validación constante", url:"https://www.youtube.com/watch?v=PYp582OObNM"}
+    ],
+    reflexionOpcional:["¿Qué comportamiento identifiqué con mayor claridad?","¿Dónde sigo buscando seguridad fuera de mí?","¿Qué necesito empezar a construir dentro de mí para sentirme más segura?"]
+  }
+},
+{
+  id:6, letter:"S", icon:"🌳", name:"Sostener",
+  session:"Sesión 6 — Integración y continuidad",
+  goal:"Integro las herramientas y creo mi plan de continuidad.",
+  objetivo:"Integrar lo aprendido y construir un plan para mantener mis avances.",
+  aprenderas:["Prevención de recaídas","Señales de alerta","Autonomía emocional","Plan de sostenimiento"],
+  resultado:"Reconozco los cambios que he logrado, integro las herramientas aprendidas y cuento con un plan claro para sostener mi bienestar emocional más allá del programa.",
+  activities:[
+    {
+      title:"Actividad 1: Mi Manual Personal Método RAÍZ",
+      body: reflect(6,"Mi estilo de apego predominante es:")
+        + reflect(6,"Mis heridas emocionales principales son:")
+        + reflect(6,"Los detonantes que más me activan son:",null,3)
+        + reflect(6,"Las señales que indican que estoy activada emocionalmente son:")
+        + reflect(6,"Las herramientas que más me ayudan a regularme son:",null,3)
+        + reflect(6,"Cuando me siento insegura necesito recordar:")
+        + reflect(6,"Mi mayor aprendizaje durante este proceso ha sido:")
+        + reflect(6,"Mi nueva definición de una relación sana es:")
+    },
+    {
+      title:"Actividad 2: Mi Plan de Sostenimiento Emocional",
+      body: p("Piensa en cómo quieres seguir cuidándote después de finalizar este proceso.")
+        + reflect(6,"Cuando note que estoy recayendo en antiguos patrones voy a:")
+        + subcat("Mis señales de alerta son:")
+        + checklist(6,["Sobrepensar","Buscar validación constante","Idealizar relaciones","Abandonarme a mí misma","Ignorar mis necesidades","Otro: ___________"])
+        + reflect(6,"Mis herramientas de emergencia son:",null,3)
+        + reflect(6,"Personas o recursos de apoyo:")
+        + reflect(6,"Mi compromiso conmigo es:")
+    },
+    {
+      title:"Actividad 3: Carta a Mi Yo del Futuro",
+      body: p("Esta actividad suele ser muy poderosa para cerrar procesos. Escribe una carta para la versión de ti que leerá este mensaje dentro de 6 meses. Cuéntale: lo que has aprendido 💚, lo que ya no quieres olvidar 💚, lo que esperas que haya cambiado 💚 y lo que deseas recordarte cuando vuelvas a dudar de ti 💚.")
+        + reflect(6,"Mi carta:",null,8)
+    }
+  ],
+  extra: {
+    title:"📄 Guía: Qué Hacer Cuando Siento que Estoy Recayendo",
+    body: callout("<strong>Primero, recuerda esto:</strong> tener un mal día no significa que hayas retrocedido. Pensar en tu ex no significa que hayas retrocedido. Sentir ansiedad no significa que hayas retrocedido. La sanación no es una línea recta. Lo importante no es no activarte nunca más, sino saber qué hacer cuando sucede.")
+      + subcat("🚨 Señales de que me estoy activando")
+      + checklist(6,["Estoy sobrepensando constantemente.","Tengo ganas de escribirle impulsivamente.","Estoy idealizando una relación pasada.","Estoy buscando validación externa.","Estoy descuidando mis propias necesidades.","Estoy ignorando mis emociones.","Siento que mi bienestar depende de otra persona."])
+      + subcat("🛑 Antes de reaccionar, pregúntate:")
+      + `<div class="checklist">
+          <div class="check-line">¿Qué emoción estoy sintiendo realmente?</div>
+          <div class="check-line">¿Qué detonó esta emoción?</div>
+          <div class="check-line">¿Qué necesidad emocional hay detrás?</div>
+          <div class="check-line">¿Estoy reaccionando desde el miedo o desde la calma?</div>
+        </div>`
+      + subcat("🌿 Herramientas que puedo usar")
+      + checklist(6,["Respiración consciente","Audio de regulación","Caminar","Journaling","Hablar con alguien de confianza","Practicar la regla de los 20 minutos","Revisar mi Manual Personal Método RAÍZ"])
+      + affirm("Las emociones son temporales. No necesito actuar de inmediato. Puedo acompañarme sin abandonarme. Ya tengo herramientas para atravesar este momento. He superado momentos difíciles antes y puedo hacerlo nuevamente.")
+      + reflect(6,"Mi plan cuando me active emocionalmente:",null,5)
+  },
+  checklistFinal:{
+    title:"📄 Checklist de Seguridad Emocional",
+    intro:"Utiliza esta lista para evaluar cómo te estás relacionando contigo misma actualmente. Marca las afirmaciones que sean verdaderas para ti.",
+    groups:[
+      {name:"🌱 Relación conmigo misma", items:["Escucho mis emociones sin juzgarme.","Dedico tiempo a mis necesidades.","Respeto mis límites.","Practico la autocompasión cuando me equivoco.","Mi valor no depende de la aprobación de otras personas."]},
+      {name:"💚 Relaciones", items:["Expreso mis necesidades de forma clara.","Puedo tolerar cierta incertidumbre sin entrar en pánico.","No persigo constantemente la validación de otros.","Identifico banderas rojas con mayor facilidad.","Elijo relaciones que aportan bienestar a mi vida."]},
+      {name:"🧠 Regulación emocional", items:["Reconozco cuándo estoy activada emocionalmente.","Utilizo herramientas de regulación antes de reaccionar.","Puedo hacer pausas antes de actuar impulsivamente.","Comprendo mis detonantes emocionales.","Me siento más capaz de acompañarme emocionalmente."]},
+    ]
+  },
+  antesDeAvanzar:["Completar Mi Manual Personal Método RAÍZ","Completar Mi Plan de Sostenimiento Emocional","Escribir Carta a Mi Yo del Futuro"],
+}
+];
+
+/* ---------------- Render de una etapa completa ---------------- */
+function renderStage(stage){
+  let html = "";
+  html += `<div class="tag">Etapa ${stage.id} · ${stage.letter} — ${stage.name}</div>`;
+  html += `<h1>${stage.icon} ${stage.session}</h1>`;
+  html += `<p class="lede">${stage.goal}</p>`;
+
+  html += `<div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="stagebar-${stage.id}"></div></div><div class="progress-pct" id="stagepct-${stage.id}">0%</div></div>`;
+
+  html += `<div class="card">`;
+  html += `<h3 style="margin-top:0">🎯 Objetivo</h3><p>${stage.objetivo}</p>`;
+  html += `<h3>Lo que aprenderás</h3><div class="chip-row">${stage.aprenderas.map(a=>`<span class="chip">${a}</span>`).join("")}</div>`;
+  html += `</div>`;
+
+  if(stage.tareasPrevias){
+    html += `<div class="callout"><strong>Clases de esta sesión:</strong><br>` + stage.tareasPrevias.join("<br>") + `</div>`;
+  }
+
+  stage.activities.forEach((act, i)=>{
+    html += `<div class="activity">`;
+    html += `<div class="activity-title">📋 ${act.title}</div>`;
+    html += act.body;
+    html += `</div>`;
+  });
+
+  if(stage.extra){
+    html += `<div class="activity"><div class="activity-title">${stage.extra.title}</div>${stage.extra.body}</div>`;
+  }
+  if(stage.checklistFinal){
+    html += `<div class="activity"><div class="activity-title">${stage.checklistFinal.title}</div><p>${stage.checklistFinal.intro}</p>`;
+    stage.checklistFinal.groups.forEach((g,gi)=>{
+      html += subcat(g.name) + checklist(stage.id, g.items, `final-g${gi}`);
+    });
+    html += reflect(stage.id,"Lo que más he fortalecido durante este proceso es:",null,3,"final-r0")
+          + reflect(stage.id,"Lo que quiero seguir trabajando es:",null,3,"final-r1")
+          + reflect(stage.id,"Una promesa que me hago a mí misma es:",null,3,"final-r2");
+    html += `</div>`;
+  }
+
+  if(stage.reflexionExtra){
+    html += `<div class="callout gold"><strong>🌱 Antes de continuar, pregúntate:</strong><br>` + stage.reflexionExtra.map(q=>`📝 ${q}`).join("<br>") + `</div>`;
+  }
+
+  if(stage.recursos){
+    html += `<h2>📚 Recursos complementarios</h2><p>Estos recursos son opcionales — no es necesario completarlos para avanzar en el programa.</p>`;
+    html += `<div class="card">`;
+    if(stage.recursos.lectura){
+      html += `<h3 style="margin-top:0">📖 Lectura recomendada</h3><p><strong>${stage.recursos.lectura.titulo}</strong><br>${stage.recursos.lectura.nota}</p>`;
+      html += `<div class="checklist">` + stage.recursos.lectura.preguntas.map(q=>`<div class="check-line">${q}</div>`).join("") + `</div>`;
+    }
+    if(stage.recursos.lecturas){
+      html += `<h3 style="margin-top:0">📖 Lecturas recomendadas</h3>`;
+      stage.recursos.lecturas.forEach(l=>{
+        html += `<div class="res-item"><div><div class="res-title">${l.titulo}</div><div class="res-note">${l.nota}</div></div></div>`;
+      });
+    }
+    if(stage.recursos.videos){
+      html += `<h3>🎥 Videos recomendados</h3>`;
+      stage.recursos.videos.forEach(v=>{
+        html += `<div class="res-item"><div class="res-title">${v.titulo}</div>${linkBtn("Ver", v.url, "ghost")}</div>`;
+      });
+    }
+    if(stage.recursos.audio){
+      html += `<h3>🎧 Audio de apoyo</h3><p>${stage.recursos.audio}</p>`;
+    }
+    if(stage.recursos.reflexionOpcional){
+      html += `<h3>💭 Reflexión opcional</h3>`;
+      html += reflect(stage.id, "Después de leer, ver o escuchar el material, ¿qué descubriste?", stage.recursos.reflexionOpcional.join(" · "), 4, "res-opt");
+    }
+    html += `</div>`;
+  }
+
+  if(stage.antesDeAvanzar){
+    html += `<h2>📌 Antes de avanzar</h2><div class="card">`;
+    stage.antesDeAvanzar.forEach((t,i)=> html += task(stage.id, t, false, `pre-${i}`));
+    html += `</div>`;
+  }
+
+  html += `<div class="affirm">🌱 ${stage.resultado}</div>`;
+
+  const prev = STAGES.find(s=>s.id===stage.id-1);
+  const next = STAGES.find(s=>s.id===stage.id+1);
+  html += `<div class="stage-footnav">`;
+  html += prev ? `<button class="btn ghost" onclick="go('etapa-${prev.id}')">← ${prev.name}</button>` : `<span></span>`;
+  html += next ? `<button class="btn" onclick="go('etapa-${next.id}')">${next.name} →</button>` : `<button class="btn" onclick="go('biblioteca')">Ir a la Biblioteca Raíz →</button>`;
+  html += `</div>`;
+
+  return html;
+}
+
+/* ---------------- Vistas estáticas ---------------- */
+function renderInicio(){
+  return `
+  <div class="tag">Bienvenida</div>
+  <h1>🌱 Bienvenida/o al Método Raíz</h1>
+  <p class="lede">Qué alegría que hayas decidido iniciar este proceso.</p>
+
+  <div class="callout">
+    <strong>Quiero darte la bienvenida</strong> a un espacio diseñado para ayudarte a comprender tus patrones emocionales, desarrollar mayor seguridad interna y construir vínculos más conscientes y saludables.
+    <br><br>
+    Este no es un proceso para "arreglarte". Es un proceso para comprenderte, regularte y transformarte <em>desde la raíz</em>.
+  </div>
+
+  <div class="person">
+    <img src="__PHOTO__" alt="Isabel Quiñonez" />
+    <div>
+      <h3 style="margin:0 0 4px">Soy Isabel Quiñonez, tu mentora.</h3>
+      <p style="margin:0">Psicóloga y mentora, creadora de Concientisa. Acompaño a personas con apego ansioso a desarrollar seguridad emocional, construir vínculos seguros y dejar de sufrir en sus relaciones a través del Método RAÍZ.</p>
+    </div>
+  </div>
+  <div class="checklist">
+    <div class="check-line">Psicóloga y mentora, creadora de Concientisa</div>
+    <div class="check-line">He ayudado a sanar el apego a más de +400 pacientes</div>
+    <div class="check-line">Experta en Apego, Trauma, Ansiedad, Autoestima y Terapia de pareja con enfoque TCC y ACT</div>
+    <div class="check-line">Comunidad en redes con más de 50 mil personas</div>
+  </div>
+
+  <h2>¿Qué encontrarás aquí?</h2>
+  <div class="grid-2">
+    <div class="card"><h3 style="margin-top:0">🛤️ Tu Camino en el Método Raíz</h3><p style="margin:0">La ruta paso a paso que seguiremos durante el proceso.</p></div>
+    <div class="card"><h3 style="margin-top:0">📚 Biblioteca Raíz</h3><p style="margin:0">Libros, cuadernillos, clases grabadas y recursos complementarios.</p></div>
+    <div class="card"><h3 style="margin-top:0">📝 Actividades y ejercicios</h3><p style="margin:0">Herramientas prácticas para integrar lo trabajado en cada etapa.</p></div>
+    <div class="card"><h3 style="margin-top:0">🎧 Audios de regulación</h3><p style="margin:0">Recursos para acompañarte en momentos de ansiedad o activación.</p></div>
+  </div>
+
+  <h2>¿Cómo funciona el programa?</h2>
+  <div class="chip-row">
+    <span class="chip">Modalidad: Online vía Google Meet</span>
+    <span class="chip">Duración: 6 semanas</span>
+    <span class="chip">6 sesiones estructuradas</span>
+    <span class="chip">1 sesión semanal</span>
+  </div>
+  <div class="callout">Cada semana trabajaremos una etapa específica del Método Raíz. Encontrarás actividades, ejercicios y recursos para ayudarte a integrar lo aprendido entre sesiones. No necesitas hacerlo todo de una vez — avanza paso a paso y a tu propio ritmo.</div>
+
+  <h2>🛤️ La ruta del Método Raíz</h2>
+  <div class="stage-cards">
+    ${STAGES.map(s=>`
+    <a class="stage-card" href="#" onclick="event.preventDefault();go('etapa-${s.id}')">
+      <div class="stage-icon">${s.icon}</div>
+      <div><div class="stage-card-title">${s.letter} — ${s.name}</div><div class="stage-card-sub">${s.objetivo}</div></div>
+      <div class="stage-card-pct" id="home-pct-${s.id}">0%</div>
+    </a>`).join("")}
+  </div>
+
+  <h2>Sobre el Método Raíz</h2>
+  <p>El Método Raíz es una metodología terapéutica desarrollada por Concientisa para ayudar a las personas a construir seguridad emocional trabajando los patrones que sostienen el apego ansioso, la dependencia emocional y la ansiedad relacional. Especializada en:</p>
+  <div class="chip-row">
+    <span class="chip">✨ apego ansioso</span><span class="chip">✨ dependencia emocional</span><span class="chip">✨ ansiedad relacional</span>
+    <span class="chip">✨ heridas afectivas</span><span class="chip">✨ regulación emocional</span><span class="chip">✨ construcción de seguridad emocional</span>
+  </div>
+  <p>Nuestro objetivo no es únicamente ayudarte a sentir alivio temporal. Buscamos ayudarte a desarrollar herramientas que puedas sostener en el tiempo, a eso llamamos convertirse en <strong>un hombre o una mujer Raíz</strong>.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="margin-top:0">✔ Durante este proceso trabajaremos en...</h3>
+      <div class="checklist">
+        <div class="check-line">Comprender tus patrones emocionales</div>
+        <div class="check-line">Identificar detonantes y activaciones</div>
+        <div class="check-line">Regular emociones difíciles</div>
+        <div class="check-line">Desarrollar seguridad emocional</div>
+        <div class="check-line">Fortalecer límites saludables</div>
+        <div class="check-line">Transformar dinámicas afectivas repetitivas</div>
+        <div class="check-line">Construir herramientas para sostener cambios reales</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Para cuidar tus expectativas</h3>
+      <p>Este proceso NO busca:</p>
+      <p style="margin:0">❌ eliminar emociones difíciles<br>❌ hacer desaparecer la ansiedad de un día para otro<br>❌ recuperar una relación específica<br>❌ ofrecer soluciones mágicas<br>❌ crear dependencia del terapeuta</p>
+    </div>
+  </div>
+
+  <div class="callout clay">
+    El trabajo emocional requiere práctica, compromiso y tiempo. Te recomendamos asistir puntualmente a las sesiones 1:1, realizar los ejercicios propuestos, reservar espacios de reflexión entre sesiones, mantener apertura y curiosidad, y permitirte avanzar paso a paso sin juzgarte. No necesitas hacerlo perfecto. Solo estar dispuesto/a a participar activamente.
+  </div>
+
+  <div class="affirm">No necesitas hacerlo perfecto. No necesitas tener todas las respuestas. Solo necesitas permitirte recorrer este proceso con curiosidad, compromiso y compasión hacia ti misma. Bienvenida/o. 🌱</div>
+
+  <p style="text-align:center;margin-top:40px">
+    <button class="btn clay" onclick="go('camino')">Comenzar mi camino →</button>
+  </p>
+  `;
+}
+
+function renderCamino(){
+  return `
+  <div class="tag">Tu proceso</div>
+  <h1>🌿 Tu camino en el Método Raíz</h1>
+  <p class="lede">Empieza por la etapa Reconocer y avanza en orden. Cada etapa construye sobre la anterior. No necesitas completar todo de una vez. Ve a tu ritmo.</p>
+
+  <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="totalbar"></div></div><div class="progress-pct" id="totalpct">0%</div></div>
+
+  <div class="stage-cards">
+    ${STAGES.map(s=>`
+    <a class="stage-card" href="#" onclick="event.preventDefault();go('etapa-${s.id}')">
+      <div class="stage-icon">${s.icon}</div>
+      <div><div class="stage-card-title">${s.letter} — ${s.session}</div><div class="stage-card-sub">${s.objetivo}</div></div>
+      <div class="stage-card-pct" id="camino-pct-${s.id}">0%</div>
+    </a>`).join("")}
+  </div>
+  `;
+}
+
+function renderBiblioteca(){
+  return `
+  <div class="tag">Recursos</div>
+  <h1>📚 Biblioteca Raíz</h1>
+  <p class="lede">Bienvenida a la Biblioteca Raíz 🌱</p>
+  <div class="callout">Este espacio ha sido creado como un complemento para acompañar tu proceso dentro del Método Raíz. Aquí encontrarás libros, cuadernillos, guías, ejercicios y recursos cuidadosamente seleccionados sobre apego, autoestima, heridas emocionales, regulación emocional, relaciones y crecimiento personal.</div>
+
+  <p><strong>¿Cómo utilizar este espacio?</strong> La Biblioteca Raíz no está diseñada para que leas o completes todo el material disponible. No es una lista de tareas ni un requisito para avanzar en el proceso. Piensa en ella como una caja de herramientas a la que puedes acudir cuando necesites mayor comprensión, apoyo o profundidad en algún tema.</p>
+
+  <div class="callout gold">🌱 No necesitas hacerlo todo. La transformación no ocurre por la cantidad de material que consumes, sino por la forma en que integras lo que aprendes. Permítete avanzar paso a paso, respetando tu ritmo.</div>
+
+  <h2>📖 Libros</h2>
+  <p>Libros seleccionados para ayudarte a comprender tus patrones emocionales, fortalecer tu autoestima, trabajar tus heridas de infancia y construir relaciones más saludables. No es necesario leerlos todos ni en un orden específico.</p>
+  <div class="card">${linkBtn("Abrir carpeta de Libros","https://drive.google.com/drive/folders/1p5osRviu0QGnzkY2_HRUrVxu7Q9TDJ1f?usp=sharing")}</div>
+
+  <h2>🎥 Clases grabadas</h2>
+  <p>Clases y materiales educativos que te ayudarán a comprender mejor conceptos clave relacionados con el apego, las heridas emocionales, la regulación emocional, la autoestima y las relaciones. No es necesario consumir todo el contenido.</p>
+  <div class="card">${linkBtn("Abrir carpeta de Clases Grabadas","https://drive.google.com/drive/folders/1zy0LOiRhBeyMtGTuqAa6xed5LaSM4AzP?usp=sharing")}</div>
+
+  <h2>🎧 Audios de regulación</h2>
+  <p>Meditaciones guiadas, ejercicios de regulación emocional, visualizaciones y audios de acompañamiento para momentos de ansiedad, activación emocional o dificultad. Puedes usarlos siempre que lo necesites.</p>
+  <div class="card">${linkBtn("Abrir carpeta de Audios","https://drive.google.com/drive/folders/1-J7zrjXhsH44VhOQxvh1wXSj23Aw1Epb?usp=sharing")}</div>
+
+  <h2>📝 Cuadernillos</h2>
+  <p>Ejercicios prácticos, guías de reflexión y actividades para profundizar en tu autoconocimiento y aplicar lo aprendido durante las sesiones.</p>
+  <div class="card">
+    <div class="res-item"><div><div class="res-title">Comprender mi Apego</div><div class="res-note">Cuadernillo de trabajo — pídele el PDF a Isabel si aún no lo tienes.</div></div></div>
+    <div class="res-item"><div><div class="res-title">Autoestima y Seguridad Interna</div><div class="res-note">Cuadernillo de trabajo</div></div></div>
+    <div class="res-item"><div><div class="res-title">Heridas de Infancia</div><div class="res-note">Cuadernillo de trabajo</div></div></div>
+  </div>
+
+  <p style="margin-top:36px">Toma aquello que te sirva, vuelve cuando lo necesites y recuerda que este espacio estará disponible para acompañarte en cada etapa de tu camino. Confía en tu proceso. Estás construyendo cambios desde la raíz. 🌱</p>
+  `;
+}
+
+function renderContacto(){
+  return `
+  <div class="tag">Acompañamiento</div>
+  <h1>📲 Sesiones y soporte</h1>
+  <p class="lede">Si tienes dudas relacionadas con el programa o necesitas apoyo sobre el uso de esta plataforma, aquí puedes contactarme o agendar tu sesión.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="margin-top:0">💬 WhatsApp de soporte</h3>
+      <p>+57 302 230 0544</p>
+      ${linkBtn("Escribir por WhatsApp","https://wa.link/uarli1","clay")}
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">📅 Agenda tu sesión</h3>
+      <p>Gestiona tus sesiones 1:1 desde el siguiente enlace.</p>
+      ${linkBtn("Agendar en Calendly","https://calendly.com/isaconcientisa/mentoriaraiz")}
+    </div>
+  </div>
+
+  <div class="callout">Recuerda: las sesiones se realizan únicamente en horarios agendados, el seguimiento breve no reemplaza una sesión terapéutica, las respuestas pueden tardar según horarios de atención, y las reprogramaciones deben realizarse con anticipación. Los límites son parte fundamental de la construcción de seguridad emocional.</div>
+  `;
+}
+
+/* ---------------- Exportar respuestas ---------------- */
+const ANSWER_LABELS = {};
+function harvestLabels(){
+  const scratch = document.createElement("div");
+  STAGES.forEach(s=>{
+    scratch.innerHTML = renderStage(s);
+    scratch.querySelectorAll("textarea[data-store]").forEach(t=>{
+      ANSWER_LABELS[t.dataset.store] = { label: t.dataset.label || "", stage: s.id, stageName: s.name, session: s.session };
+    });
+  });
+}
+
+function exportAnswers(){
+  const fecha = new Date().toLocaleDateString("es-CO", {year:"numeric", month:"long", day:"numeric"});
+  let out = "MÉTODO RAÍZ — Mis respuestas\nIsabel Quiñonez · Concientisa\nExportado el " + fecha + "\n" + "=".repeat(60) + "\n\n";
+  let any = false;
+
+  STAGES.forEach(s=>{
+    let stageOut = "";
+    Object.keys(ANSWER_LABELS).forEach(id=>{
+      const meta = ANSWER_LABELS[id];
+      if(meta.stage !== s.id) return;
+      const val = localStorage.getItem("raiz_" + id);
+      if(val && val.trim()){
+        stageOut += `— ${meta.label}\n${val.trim()}\n\n`;
+        any = true;
+      }
+    });
+    if(stageOut){
+      out += `ETAPA ${s.id} · ${s.name.toUpperCase()} — ${s.session}\n${"-".repeat(50)}\n${stageOut}\n`;
+    }
+  });
+
+  if(!any){
+    out += "Todavía no has completado ninguna reflexión escrita.\n";
+  }
+
+  const blob = new Blob([out], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mis-respuestas-metodo-raiz.txt";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  flashSaved();
+}
+
+/* ---------------- Router ---------------- */
+const routes = {
+  inicio: renderInicio,
+  camino: renderCamino,
+  biblioteca: renderBiblioteca,
+  contacto: renderContacto,
+};
+STAGES.forEach(s=> routes[`etapa-${s.id}`] = ()=>renderStage(s));
+
+function go(route){
+  if(!routes[route]) route = "inicio";
+  const main = document.getElementById("main");
+  main.innerHTML = `<div class="view active">${routes[route]()}</div>`;
+  main.querySelector('.view').innerHTML = main.querySelector('.view').innerHTML.replace("__PHOTO__", window.__RAIZ_PHOTO__ || "");
+  window.scrollTo({top:0, behavior:"instant"});
+  updateNavActive(route);
+  hydrateStorage();
+  updateAllProgress();
+  window.location.hash = route;
+  document.getElementById("sidebar").classList.remove("open");
+}
+
+function updateNavActive(route){
+  document.querySelectorAll(".nav-link").forEach(el=>{
+    el.classList.toggle("active", el.dataset.route === route);
+  });
+  document.querySelectorAll(".stage-node").forEach(el=>{
+    el.classList.toggle("active", el.dataset.route === route);
+  });
+}
+
+/* ---------------- Toast de guardado ---------------- */
+let toastTimer;
+function flashSaved(){
+  const toast = document.getElementById("saveToast");
+  if(!toast) return;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> toast.classList.remove("show"), 1600);
+}
+
+/* ---------------- Persistencia ---------------- */
+function hydrateStorage(){
+  document.querySelectorAll("[data-store]").forEach(el=>{
+    const key = "raiz_" + el.dataset.store;
+    const saved = localStorage.getItem(key);
+    if(el.type === "checkbox"){
+      el.checked = saved === "1";
+      if(el.dataset.task){
+        el.closest(".task-item").classList.toggle("checked", el.checked);
+      }
+      el.addEventListener("change", ()=>{
+        localStorage.setItem(key, el.checked ? "1" : "0");
+        if(el.dataset.task){
+          el.closest(".task-item").classList.toggle("checked", el.checked);
+        }
+        updateAllProgress();
+        flashSaved();
+      });
+    } else {
+      if(saved) el.value = saved;
+      let t;
+      el.addEventListener("input", ()=>{
+        clearTimeout(t);
+        t = setTimeout(()=> { localStorage.setItem(key, el.value); flashSaved(); }, 500);
+      });
+    }
+  });
+}
+
+/* ---------------- Progreso ---------------- */
+function stageProgress(stageId){
+  const boxes = Array.from(document.querySelectorAll(`[data-task][data-stage="${stageId}"]`));
+  if(!boxes.length) return computeStageProgressGlobal(stageId);
+  const total = boxes.length, done = boxes.filter(b=>b.checked).length;
+  return total ? Math.round(done/total*100) : 0;
+}
+// compute progress for a stage even when we're not currently viewing it (scan localStorage keys)
+function computeStageProgressGlobal(stageId){
+  let total=0, done=0;
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k && k.startsWith(`raiz_task-${stageId}-`)){
+      total++;
+      if(localStorage.getItem(k)==="1") done++;
+    }
+  }
+  return total ? Math.round(done/total*100) : 0;
+}
+
+function updateAllProgress(){
+  let overallTotal=0, overallDone=0;
+  STAGES.forEach(s=>{
+    const pct = document.querySelector(`[data-task][data-stage="${s.id}"]`) ? stageProgress(s.id) : computeStageProgressGlobal(s.id);
+    // sidebar node
+    const dot = document.querySelector(`.stage-node[data-route="etapa-${s.id}"] .node-dot`);
+    if(dot){
+      dot.classList.toggle("done", pct===100);
+      dot.classList.toggle("partial", pct>0 && pct<100);
+    }
+    // page-level bar (if present)
+    const bar = document.getElementById(`stagebar-${s.id}`);
+    const pctEl = document.getElementById(`stagepct-${s.id}`);
+    if(bar){ bar.style.width = pct + "%"; }
+    if(pctEl){ pctEl.textContent = pct + "%"; }
+    const homePct = document.getElementById(`home-pct-${s.id}`);
+    if(homePct) homePct.textContent = pct + "%";
+    const caminoPct = document.getElementById(`camino-pct-${s.id}`);
+    if(caminoPct) caminoPct.textContent = pct + "%";
+
+    // count totals from storage for overall bar
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith(`raiz_task-${s.id}-`)){
+        overallTotal++;
+        if(localStorage.getItem(k)==="1") overallDone++;
+      }
+    }
+  });
+  const totalPct = overallTotal ? Math.round(overallDone/overallTotal*100) : 0;
+  const totalBar = document.getElementById("totalbar");
+  const totalPctEl = document.getElementById("totalpct");
+  if(totalBar) totalBar.style.width = totalPct + "%";
+  if(totalPctEl) totalPctEl.textContent = totalPct + "%";
+}
+
+/* ---------------- Sidebar root path ---------------- */
+function buildSidebarNodes(){
+  const wrap = document.getElementById("rootPath");
+  let html = `<svg class="spine" viewBox="0 0 26 500" preserveAspectRatio="none"><path d="M13,0 C13,80 13,80 13,500" stroke="#C98A6E" stroke-width="2" fill="none" stroke-dasharray="3 5"/></svg>`;
+  STAGES.forEach(s=>{
+    html += `<button class="stage-node" data-route="etapa-${s.id}" onclick="go('etapa-${s.id}')">
+      <span class="node-dot"></span>
+      <span class="node-label"><span class="node-letter">${s.letter} · Etapa ${s.id}</span><span class="node-title">${s.icon} ${s.name}</span></span>
+    </button>`;
+  });
+  wrap.innerHTML = html;
+}
+
+/* ---------------- Init ---------------- */
+document.querySelectorAll(".nav-link[data-route]").forEach(el=>{
+  el.addEventListener("click", ()=> go(el.dataset.route));
+});
+document.getElementById("menuBtn")?.addEventListener("click", ()=>{
+  document.getElementById("sidebar").classList.toggle("open");
+});
+
+buildSidebarNodes();
+document.querySelectorAll(".stage-node[data-route]").forEach(el=>{
+  // already has inline onclick; nothing more needed
+});
+
+const logoEl = document.querySelector(".brand-logo");
+if(logoEl) logoEl.src = window.__RAIZ_LOGO__ || "";
+
+document.getElementById("exportBtn")?.addEventListener("click", exportAnswers);
+
+const startRoute = (window.location.hash || "#inicio").replace("#","");
+go(routes[startRoute] ? startRoute : "inicio");
+
+</script>
+</body>
+</html>
